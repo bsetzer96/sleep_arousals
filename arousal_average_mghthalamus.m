@@ -97,7 +97,7 @@ for k = 1:length(subjects)
     
 end
 legend([ rois_hdr 'arousal'])
-%%
+  %%
 groupAvg = nanmean(allArousAll, 3);
 groupStd= nanstd(allArousAll, [], 3)/sqrt(size(allArousAll,3));
 %number of arousals for each subject
@@ -111,9 +111,9 @@ for l = 1:length(rois_hdr)
     refline(0, 0);
     plot(time, groupAvg(:,l), 'k', 'LineWidth', 2); 
     y2 = groupAvg(:,l)+groupStd(:,l);
-    plot(time, y2, 'b-')
+    plot(time, y2, 'b--')
     y1 = groupAvg(:,l)-groupStd(:,l);
-    plot(time, y1, 'b-')
+    plot(time, y1, 'b--')
     set(gca, 'FontSize',10)
     ylim([-2 2.5])
     title([ rois_hdr{l}])
@@ -123,6 +123,7 @@ end
 crosscoranal(allArousAvg, time, rois_hdr, range)
 
 %% bootstrap analysis of correlations and lags
+%averages regions then takes cross-correlation
 [lagmean, upper, lower,cormean] = bootstrapanal(allArousAll, time, rois_hdr);
 
 %% plotting mean lag and max correlation of bootsratp
@@ -147,18 +148,43 @@ lw=mean(lower);
 figure()
 X=categorical(rois_hdr);
 b = bar(X,avglag); 
-xlabel('Regions'); ylabel('Lag (S)'); title('Lags')
+xlabel('Regions'); ylabel('Lag (S)'); title('Average lags of averaged ROIs bootstrap')
 hold on
 er = errorbar(X,avglag,abs(avglag-lw), abs(up-avglag));    
 er.Color = [0 0 0];                            
 er.LineStyle = 'none';  
 legend('Mean Lag', '95% CI')
 
-%% avg correlations from bootstrap
+%% avg correlations from bootstrap of arousals averaged and then cross-correlated
 figure()
 c=bar(X, avgcor)
-xlabel('Cortical Regions'); ylabel('Cor (S)'); title('Cortical region correlations')
+xlabel('Regions of Interest'); ylabel('Cor (S)'); title('avereged ROIs bootstrap average max correlations')
 
+%% Area-area lags 
+m={'pul-pul', 'pul-md', 'pul-av', 'pul-lgn', 'pul-cm', 'pul-va', 'pul-vla','pul-vlp', 'pul-vpl',...
+    'md-pul', 'md-md', 'md-av', 'md-lgn', 'md-cm', 'md-va', 'md-vla', 'md-vlp','md-vpl',...
+    'av-pul', 'av-md', 'av-av', 'av-lgn', 'av-cm', 'av-va', 'av-vla', 'av-vlp','av-vpl',...
+    'lgn-pul', 'lgn-md', 'lgn-av', 'lgn-lgn', 'lgn-cm', 'lgn-va', 'lgn-vla', 'lgn-vlp','lgn-vpl',...
+    'cm-pul', 'cm-md', 'cm-av', 'cm-lgn', 'cm-cm', 'cm-va', 'cm-vla', 'cm-vlp','cm-vpl',...
+    'va-pul', 'va-md', 'va-av', 'va-lgn', 'va-cm', 'va-va', 'va-vla', 'va-vlp','va-vpl',...
+    'vla-pul', 'vla-md', 'vla-av', 'vla-lgn', 'vla-vm', 'vla-va', 'vla-vla', 'vla-vlp','vla-vpl',...
+    'vlp-pul', 'vlp-md', 'vlp-av', 'vlp-lgn', 'vlp-vm', 'vlp-va', 'vlp-vla', 'vlp-vlp', 'vlp-vpl',...
+    'vpl-pul', 'vpl-md', 'vpl-av', 'vpl-lgn', 'vpl-vm', 'vpl-va', 'vpl-vla', 'vpl-vlp','vpl-vpl'};
+lm=reshape(lagmean, [81,1]);
+lw=reshape(lower, [81,1]);
+up=reshape(upper, [81,1]);
+figure()
+X=categorical(m);
+b = bar(X,lm); 
+xlabel('Regions'); ylabel('Lag (S)'); title('Lags')
+hold on
+er = errorbar(X,lm,abs(lm-lw), abs(up-lm));    
+er.Color = [0 0 0];                            
+er.LineStyle = 'none';  
+legend('Mean Lag', '95% CI')
+
+%% Taking lags of individual arousals first and then averaging.
+singleArousalLags(allArousAll, time, rois_hdr)
 
 %% saving
 

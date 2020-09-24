@@ -1,7 +1,7 @@
 function [lagmean,lower,upper,cormean] = bootstrapanal(all_arousals, t, ROIs)
-%all_arousals=allArousAll;
-%ROIs=rois_hdr;
-%t=time;
+% all_arousals=allArousAll;
+% ROIs=rois_hdr;
+% t=time;
 %%
 %load('arousal_ROIs_all.mat')
 %%
@@ -52,6 +52,32 @@ cormean=mean(abs(Cor),3);
 bnds=prctile(Lcor, [2.5, 97.5],3);
 lower=bnds(:,:,1);
 upper=bnds(:,:,2);
+
+%%
+
+% n=size(all_arousals,3);
+% Lcorj=zeros(numrois,numrois,n);
+% Corj=Lcorj;
+% for i = 1:1000
+%     bind=ceil(rand(n,1)*n); %choosing random arousals
+%     boot_rois_all = thal_roi(:,:,bind); %extracting random arousls
+%     %boot_rois= mean(boot_rois_all,3); %averaging
+%     for j=1:n %for each arousal
+%         for c=1:numrois %for each ROI
+%             for d=1:numrois
+%                 [xc, lags] = xcorr(boot_rois_all(ind,c,n),boot_rois_all(ind,d,n),range,'coeff');
+%                 %figure(); plot(lags, xc); title([thal_ROIs(c) ' vs ' thal_ROIs(d)])
+%                 [m,in]= max(xc); %extracting max correlation 
+%                 Lcorj(c,d,j)= lags(in)*dt; %defining lag of max cor
+%                 Corj(c,d,j)= max(xc);
+%             end
+%         end
+%     end
+%         Lcor(:,:,i)=mean(Lcorj,3);
+%         Cor(:,:,i)=mean(Corj,3);
+% end
+
+%%
 
 
 end
