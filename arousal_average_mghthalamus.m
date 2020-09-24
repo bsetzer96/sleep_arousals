@@ -120,7 +120,7 @@ for l = 1:length(rois_hdr)
 end
     legend('arousal', 'ROI signal', 'standard error', 'Location', 'NorthEast')
 %% cross-correlation of averaged signals
-crosscoranal(allArousAvg, time, rois_hdr, range)
+crosscoranal(groupAvg, time, rois_hdr, range)
 
 %% bootstrap analysis of correlations and lags
 %averages regions then takes cross-correlation
