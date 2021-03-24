@@ -1,5 +1,5 @@
 %% cross-covariance%
-function [] = crosscoranal(total_avg, t, ROIs, range)
+function [Lcor, Cor] = crosscoranal(total_avg, t, ROIs, range)
 %load(aroual_ROIs)
 %ROIs=hdr.ROIs
 %t=hdr.t;
@@ -12,16 +12,17 @@ n=size(total_avg,2);
 dt=t(2)-t(1);
 
 ind= 60:(length(t)-60) ;%find((t>-10)&(t<10));
+%ind=1:length(t);
 Cor=zeros(n,n);
 Lcor=zeros(n,n);
 
 for c=1:n
     for d=1:n
         [xc, lags] = xcorr(total_avg(ind,c),total_avg(ind,d),range,'coeff');
-        %figure();plot(lags*dt,xc, '*'); xlabel('Lag (S)'); ylabel('Correlation');
-        %title([ROIs{i} ' vs ' ROIs{j}]); 
-        %figure(); plot(t(ind), total_avg(ind,c), t(ind), total_avg(ind,d))
-        %legend(ROIs{i}, ROIs{j});title('Raw Time-Series'); xlabel('Time (S)'); ylabel('BOLD Signal (%)')
+         %figure();plot(lags*dt,xc, '*'); xlabel('Lag (S)'); ylabel('Correlation');
+%         title([ROIs{c} ' vs ' ROIs{d}]); 
+%         figure(); plot(t(ind), total_avg(ind,c), t(ind), total_avg(ind,d))
+%         legend(ROIs{c}, ROIs{d});title('Raw Time-Series'); xlabel('Time (S)'); ylabel('BOLD Signal (%)')
         [m,in]= max(abs(xc));
         %lag with max correlation
         Lcor(c,d)= lags(in)*dt;

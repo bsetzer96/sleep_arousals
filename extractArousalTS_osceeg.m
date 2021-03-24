@@ -1,4 +1,4 @@
-function [roiArous, time, kept] = extractArousalTS(subject, run, rois_hdr, folder, path, toplot, range, minClick, maxClick, arousalTimes, clicks)
+function [roiArous, time, kept, numClicks] = extractArousalTS_osceeg(subject, run, rois_hdr, ~, path, toplot, range, minClick, maxClick, arousalTimes, clicks, time_MRI)
 % new version of loading individual subjects, plotting, and averaging their arousals
 %INPUT :: subject - string of subject name ex) 
 %           run - string of run number
@@ -17,14 +17,13 @@ function [roiArous, time, kept] = extractArousalTS(subject, run, rois_hdr, folde
 
 %load ROIs
 numROI= length(rois_hdr);
-ROIs = load([path rois_hdr{1} '_' run '_timecourse.txt']);
-
-time_MRI = 0:0.247:(0.247*(length(ROIs)-1));
+ROIs = load([path run '_' rois_hdr{1}  '.txt']);
+time_MRI=time_MRI(1:length(ROIs));
 if toplot==1
     figure(); plot(time_MRI, ROIs- mean(ROIs)); hold on
 end
 for i = 2:length(rois_hdr)
-    ROIs = [ROIs, load([path rois_hdr{i} '_' run '_timecourse.txt']);];
+    ROIs = [ROIs, load([path run '_' rois_hdr{i} '.txt']);];
     if toplot ==1 
         plot(time_MRI, ROIs(:,i) - mean(ROIs(:,i))); 
     end
@@ -57,7 +56,7 @@ end
 %% find time of closest TR to arousal
 dt = timeInterp(2)-timeInterp(1);
 %throw out 'arousals' that occured after MR stopped
-arousalTimes = arousalTimes(find(arousalTimes<timeInterp(end)));
+arousalTimes = arousalTimes(arousalTimes<timeInterp(end));
 numArous= length(arousalTimes);
 %matrix of timeseries in arousal window
 roiArous = zeros(range*2+1, numROI, 0);
@@ -68,7 +67,7 @@ time = -int:dt:int;
 arous_sum = 0;
 all_arousals = zeros(range*2+1, numROI, arous_sum);
 kept = 0; thrown_out = 0;
-
+numClicks=0;
 
 %for each arousal, make sure we can take a range around the arousal (not
 %too close to beginning or end), Make sure there's not too much movement
@@ -77,31 +76,26 @@ kept = 0; thrown_out = 0;
 for j = 1:numArous
     roiCrop = zeros(range*2+1, numROI, numArous);
     arousTime = arousalTimes(j);
-    %find closest TR to arousal time
     clickind = find((timeInterp < arousTime +(1/2)*dt) & (timeInterp > arousTime - (1/2)*dt));
     timeClick = timeInterp(clickind);
-    if (clickind+range > length(roiInterp)) || (clickind-range<0) %if range around arousal is out of range of vector
+    if length(clickind)>0
+    if (clickind+range > length(roiInterp)) || (clickind-range<=0) %if range around arousal is out of range of vector
         thrown_out = thrown_out+1;
     else %if inside the range
         roiCrop = roiInterp(clickind-range:clickind+range, :);
         timeCrop = timeInterp(:,clickind-range:clickind+range);
-        %PET data?
-        %petind=find((time >min) & (time<max)
-        %petTimeCrop = petTime(petind)
-        %petCrop=petdata(petind), then build into a matrix
         %time of button presses within range
-        clicksCrop = clicks(find((clicks<max(timeCrop))&(clicks>min(timeCrop))));
+        clicksCrop = clicks((clicks<max(timeCrop))&(clicks>min(timeCrop)));
         %analyze movement around click
         fdInd = find((time_MRIfd>timeCrop(1)) & (time_MRIfd < timeCrop(end)));
         %throw out arousal if there is movement over 0.3
         if sum(find(fd(fdInd)>0.3))>0 %if too much movement
             thrown_out = thrown_out+1;
-        %sustained vs transient arousals - probably dont need 
         elseif length(clicksCrop)< minClick %if there's not enough clicks
-            thrown_out = thrown_out+1
+            thrown_out = thrown_out+1;
         elseif length(clicksCrop)> maxClick % if theirs too many clicks
             thrown_out = thrown_out+1
-        else
+        else 
             %crop and save each roi
             for k = 1:numROI
                 roiC = roiCrop(:,k);
@@ -109,6 +103,7 @@ for j = 1:numArous
                 roiCropPC(:,k) = ((roiC - mean(roiC))/mean(roiC))*100;
             end
             kept = kept+1;
+            numClicks(kept)=length(clicksCrop); %number of clicks during arousal
             roiArous(:,:,kept) = roiCropPC;
             clickTimes(j) = timeClick;
             if toplot ==1
@@ -124,6 +119,7 @@ for j = 1:numArous
             end
         
         end
+    end
     end
 
 end

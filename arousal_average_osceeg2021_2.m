@@ -4,44 +4,36 @@ clc;clear;close all
 
 cd /ad/eng/research/eng_research_lewislab/users/bsetzer/scripts/sleep_arousals/arousal_BOLD
 addpath(genpath('../gen_functions'))
+
+%version 2 is to extract ROIs out my my folder instead of labs data folder
 %%
-%subjects = {'mghthalamus1' 'mghthalamus2' 'mghthalamus3' ...
-%    'mghthalamus5' 'mghthalamus6' 'mghthalamus9' 'mghthalamus10'};
-%subjects = {'inkrefcap5' 'inkrefcap7b' 'inkrefcap8'};
-subjects = {'mghthalamus1' 'mghthalamus2' 'mghthalamus3' ...
-    'mghthalamus5' 'mghthalamus6' 'mghthalamus9' 'mghthalamus10'...
-    'mghthalamus12' 'mghthalamus13'...
-    'inkrefcap5' 'inkrefcap7b' 'inkrefcap8' 'inkrefcap11'}
-%subjects = {'mghthalamus12', 'mghthalamus13'}
+subjects = {'osceeg15b', 'osceeg17b', 'osceeg19b', 'osceeg20b', 'osceeg21b', 'osceeg22b'};
+%subjects={'osceeg22b'};
 %All cortical ROIs, except 'ctx-corpuscallosum'
-% rois_hdr={'ctx-bankssts', 'ctx-caudalanteriorcingulate', 'ctx-caudalmiddlefrontal',...
-%     'ctx-cuneus','ctx-entorhinal', 'ctx-frontalpole', 'ctx-fusiform', 'ctx-inferiorparietal', 'ctx-inferiortemporal',...
-%     'ctx-insula', 'ctx-isthmuscingulate', 'ctx-lateraloccipital', 'ctx-lateralorbitofrontal', 'ctx-lingual',...
-%     'ctx-medialorbitofrontal', 'ctx-middletemporal', 'ctx-ostralmiddlefrontal', 'ctx-paracentral',...
-%     'ctx-parahippocampal', 'ctx-parsopercularis',  'ctx-parsorbitalis', 'ctx-parstriangularis', 'ctx-pericalcarine',...
-%     'ctx-postcentral', 'ctx-posteriorcingulate', 'ctx-precentral', 'ctx-precuneus', 'ctx-rostralanteriorcingulate', 'ctx-superiorfrontal',...
-%     'ctx-superiorparietal', 'ctx-superiortemporal', 'ctx-supramarginal', 'ctx-temporalpole', 'ctx-transversetemporal', 'ctx-unknown'}
-%rois_hdr = {'pulvinar', 'MD', 'av' 'lgn', 'cm', 'mdl', 'mdm', 'pum', 'va', 'vla', 'vlp', 'vpl'}
-%rois_hdr = {'pulvinar', 'MD', 'av' 'lgn', 'cm', 'va', 'vla', 'vlp', 'vpl'}
-%rois_hdr = {'pulvinar', 'MD', 'av', 'lgn', 'cem' ,'cl', 'cm', 'l-sg', 'ld', 'mdl', 'mdm', 'mgn', 'mv(re)', 'pc', 'pf', 'pt', 'pua', 'pui', 'pul', 'pum', 'va', 'vamc', 'vla', 'vlp', 'vm', 'vpl'};
+ rois_hdr={'ctx-bankssts', 'ctx-caudalanteriorcingulate', 'ctx-caudalmiddlefrontal',...
+    'ctx-cuneus','ctx-entorhinal', 'ctx-frontalpole', 'ctx-fusiform', 'ctx-inferiorparietal', 'ctx-inferiortemporal',...
+    'ctx-insula', 'ctx-isthmuscingulate', 'ctx-lateraloccipital', 'ctx-lateralorbitofrontal', 'ctx-lingual',...
+    'ctx-medialorbitofrontal', 'ctx-middletemporal', 'ctx-rostralmiddlefrontal', 'ctx-paracentral',...
+    'ctx-parahippocampal', 'ctx-parsopercularis',  'ctx-parsorbitalis', 'ctx-parstriangularis', 'ctx-pericalcarine',...
+    'ctx-postcentral', 'ctx-posteriorcingulate', 'ctx-precentral', 'ctx-precuneus', 'ctx-rostralanteriorcingulate', 'ctx-superiorfrontal',...
+    'ctx-superiorparietal', 'ctx-superiortemporal', 'ctx-supramarginal', 'ctx-temporalpole', 'ctx-transversetemporal', 'ctx-unknown'};
 %rois_hdr = {'wholeThalamus', 'brainstem', 'cortex'}
-rois_hdr = {'wholeThalamus',  'cortex'}
+%rois_hdr = {'wholeThalamus',  'cortex'}
+%rois_hdr = {'ctx_atlas', 'thalamus_atlas'};
 
 %choose cortical folder for ctx and probinterp folder for thalamic nuclei
-%fold='cortical/';
+fold='cortical/';
 %fold='probinterp/';
-fold='';
+%fold='';
 
 toplot=0;
 %number of interpolated time points to use
-range =300;%150; %300;%150;%300; %150;% 150;%300; %150; %300; % 150; %
+range =217;%150; %300;%150;%300; %150;% 150;%300; %150; %300; % 150; %
 %range in seconds for plots
 rngsec=20;
 %minimum and maximum number of clicks after arousal
-minClick = 9; %5 ; %4
-maxClick =9; %40 ; %25
-
-tr=0.247/4;
+minClick = 1 ;%1 ; %4
+maxClick =25 ; %25
 
 %matrix of how many arousals each subject has
 totalArousAll = zeros(length(subjects),1);%%
@@ -50,28 +42,30 @@ allArousAll = zeros(range*2+1, length(rois_hdr), totalArousAll(1));
 figure()
 for k = 1:length(subjects)
     subject = subjects{k};
-    datapath = ['/projectnb/fastfmri/bsetzer/sleep_arousals/' subject '/'];
-    fname=dir([datapath 'stcfsl_mc2_tvreg/' '*.nii']);
-    if subject(1)=='m'
-        folder= 'mghthalamus/';
-    elseif subject(1)=='i'
-        folder='inkrefcap/';
-    end
+    %datapath = ['/ad/eng/research/eng_research_lewislab/data/osceeg_frommgh/' subject];
+    datapath = ['/projectnb/fastfmri/bsetzer/sleep_arousals/' subject];
+    datapath2=['/ad/eng/research/eng_research_lewislab/data/osceeg_frommgh/' subject] ;
+    fname=dir([datapath '/scores/' '*_score.mat']);
     path=[datapath '/rois/',fold];
+    folder='osceeg_frommgh/';
+    %folder='osceeg/';
 
     %storing number of arousals for each run
     totalArous = zeros(length(fname)+1,1);
     %storing arousal timeseries for each subject 
-    %allArous = zeros(range*2+1, length(rois_hdr), totalArous(1));
     allArous = zeros(range*2+1, length(rois_hdr), totalArous(1));
-
     for i = 1:length(fname) %loop through each run
         run = fname(i).name(1:5);
         cutoff = 20; %20; %number of seconds without a click to count as arousal
+        %load info
+        load([datapath2 '/eeg/fs200_averef_regbcg/' run '/hdr.mat'])
+        timMRI=hdr.trs;
         %getting arousal times and clicks for run
-        [arousalTimes, clicks]= extractArous_mghthal(subject, run, cutoff, folder);
+        [arousalTimes, clicks]= extractArous(subject, run, cutoff, folder);
         %getting arousal timeseries and number of arousals
-        [roiArous, time, kept] = extractArousalTS(subject, run, rois_hdr, folder, path, toplot, range, minClick, maxClick, arousalTimes, clicks);
+        [roiArous, time, kept, tracking] = extractArousalTS_osceeg2(subject, run, rois_hdr, folder, path, toplot, range, minClick, maxClick, arousalTimes, clicks, timMRI);
+        %[roiArous, time, kept] = extractArousalTS(subject, run, rois_hdr, folder, path, toplot, range, minClick, maxClick, arousalTimes, clicks, timMRI);
+
         %store number of arousals
         %kept
         totalArous(i+1) = totalArous(i)+kept;
@@ -85,7 +79,7 @@ for k = 1:length(subjects)
 
     %average for each subject accross runs
     allArousAvg = mean(allArous, 3);
-    time=-range*tr:tr:range*tr;
+    
     %figure();
     subplot(4,4,k)
     plot(time, allArousAvg); hold on
@@ -114,10 +108,10 @@ groupStd= nanstd(allArousAll, [], 3)/sqrt(size(allArousAll,3));
 figure(6);    
 %plot([0 0], [-2 5], 'k', 'LineWidth', 2); hold on  
 %[3 8 12 19]
-for l =  1:length(rois_hdr)
-    subplot(2, 1, l)
+plot([0 0], [-1 1.2], 'g', 'LineWidth', 2); hold on
+for l =   1:length(rois_hdr)
+    subplot(3,3,l)
     xlim([-rngsec rngsec])
-    plot([0 0], [-2.5 5], 'g', 'LineWidth', 2); hold on
     nc=groupAvg(:,l)-mean(groupAvg(60:160,l)); %centered at baseline
     plot(time, nc, 'LineWidth', 2); 
     y2 = nc+groupStd(:,l);
@@ -126,9 +120,9 @@ for l =  1:length(rois_hdr)
     plot(time, y1, 'b')
     set(gca, 'FontSize',10)
     refline(0, 0);
-    ylim([-1 4])
+    ylim([-2 1])
     title([ rois_hdr{l}])
-    %title('Cortical Regions Arousal-locked Activation')
+    %title('Arousal-locked Activation')
 end
 legend('Arousal', rois_hdr{[1 2]}, 'standard error')
 xlabel('Time (s)'); ylabel('BOLD signal (% change)')
@@ -137,13 +131,10 @@ xlabel('Time (s)'); ylabel('BOLD signal (% change)')
 %legend('arousal', 'ROI signal', 'standard error', 'Location', 'NorthEast')
 %% cross-correlation of averaged signals
 [Lcor, Cor]= crosscoranal(groupAvg, time, rois_hdr, range);
-lcorAvg= nanmean(Lcor+diag(NaN*ones(length(rois_hdr),1)),1);
-corAvg=nanmean(Cor+diag(NaN*ones(length(rois_hdr),1)),1)
-%avglag=nanmean(lagmean+diag(NaN*ones(length(rois_hdr),1)), 1)
-
+lcorAvg= mean(Lcor);
 %% bootstrap analysis of correlations and lags
 %averages regions then takes cross-correlation
-[lagmean, upper, lower,cormean, lagstd] = bootstrapanal_heirarch(allArousAll, time, rois_hdr, totalArousAll);
+[lagmean, upper, lower,cormean, lagstd] = bootstrapanal(allArousAll, time, rois_hdr);
 
 %% plotting mean lag and max correlation of bootsratp
 figure(); heatmap(lagmean); set(gca, 'xdata', rois_hdr, 'ydata', rois_hdr); 
@@ -155,19 +146,15 @@ figure()
 heatmap(cormean); cmap=gray; colormap(gca,cmap)
 set(gca, 'xdata', rois_hdr, 'ydata', rois_hdr);
 %% average lag
-avglag=nanmean(lagmean+diag(NaN*ones(length(rois_hdr),1)), 1)
-%avglag=nanmean(lagmean, 1)
-avgcor=nanmean(cormean+diag(NaN*ones(length(rois_hdr),1)), 1);
+avglag=mean(lagmean, 1);
+avgcor=mean(cormean,1);
 %save('ctx_lastavglags.mat', 'avglag', 'rois_hdr')
 %save('ctx_avgcor.mat', 'avgcor', 'rois_hdr')
 %% Plotting averages with error bars
 
 %load('../../outputs/breathhold/breathhold_lags_thal.mat')
-% up=mean(upper);
-% lw=mean(lower);
-up=nanmean(upper+diag(NaN*ones(length(rois_hdr),1)));
-lw=nanmean(lower+diag(NaN*ones(length(rois_hdr),1)));
-
+up=mean(upper);
+lw=mean(lower);
 
 figure()
 X=categorical(rois_hdr);
@@ -213,7 +200,7 @@ legend('Mean Lag', '95% CI')
 
 %% saving
 
-save('/projectnb/fastfmri/bsetzer/sleep_arousals/avg_ts/all_ctx_20s', 'allArousAll', 'rois_hdr', 'totalArousAll', 'groupAvg', 'groupStd')
+save('/projectnb/fastfmri/bsetzer/sleep_arousals/avg_ts/ctx_rois_20s_3T', 'allArousAll', 'rois_hdr', 'totalArousAll', 'groupAvg', 'groupStd')
 
-save('/projectnb/fastfmri/bsetzer/sleep_arousals/avg_ts/lags_thal_20s', 'lcorStd', 'lcorAvg')
+%save('/projectnb/fastfmri/bsetzer/sleep_arousals/avg_ts/lags_thal_20s', 'lcorStd', 'lcorAvg')
 
